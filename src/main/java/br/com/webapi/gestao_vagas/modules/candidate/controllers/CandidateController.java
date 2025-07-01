@@ -1,5 +1,8 @@
 package br.com.webapi.gestao_vagas.modules.candidate.controllers;
 
+import br.com.webapi.gestao_vagas.exceptions.UserFoundException;
+import br.com.webapi.gestao_vagas.modules.candidate.CandidateRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,10 +15,18 @@ import jakarta.validation.Valid;
 @RequestMapping("/candidate")
 public class CandidateController {
 
+    @Autowired
+    private CandidateRepository candidateRepository;
+
     @PostMapping("/")
-    public void create(@Valid @RequestBody CandidateEntity candidateEntity) {
-        System.out.println(candidateEntity);
-        System.out.println(candidateEntity.getEmail());
+    public CandidateEntity create(@Valid @RequestBody CandidateEntity candidateEntity) {
+        this.candidateRepository
+                .findByUsernameOrEmail(candidateEntity.getUsername(), candidateEntity.getEmail())
+                .ifPresent((user) ->{
+                    throw new UserFoundException();
+                });
+
+        return this.candidateRepository.save(candidateEntity);
     }
 
 
